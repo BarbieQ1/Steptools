@@ -2,7 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 import os, math, pyperclip
 
-dir = r"C:\Users\micro\OneDrive\Desktop\Steptools\Games\Lost Ark\Encounter\--aegir"
+dir = r"https://github.com/BarbieQ1/Steptools/tree/main/Scripts/AegirG1-pictures"
 names = ["eye.png", "hea.png", "horn.png", "sick.png"]
 colormap = {"eye.png": "red", "hea.png": "green", "horn.png": "blue", "sick.png": "black"}
 posmap = {1: 12, 2: 1, 3: 3, 4: 5, 5: 6, 6: 7, 7: 9, 8: 11}
