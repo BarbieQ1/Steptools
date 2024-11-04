@@ -1,8 +1,10 @@
 import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
-import os, math, pyperclip
+import requests
+from io import BytesIO
+import math, pyperclip
 
-dir = r"https://github.com/BarbieQ1/Steptools/tree/main/Scripts/AegirG1-pictures"
+base_url = "https://raw.githubusercontent.com/BarbieQ1/Steptools/main/Scripts/AegirG1-pictures"
 names = ["eye.png", "hea.png", "horn.png", "sick.png"]
 colormap = {"eye.png": "red", "hea.png": "green", "horn.png": "blue", "sick.png": "black"}
 posmap = {1: 12, 2: 1, 3: 3, 4: 5, 5: 6, 6: 7, 7: 9, 8: 11}
@@ -102,8 +104,10 @@ def make_chk():
     return ImageTk.PhotoImage(img)
 
 for n in names:
-    img_path = os.path.join(dir, n)
-    img = Image.open(img_path).resize((30, 30), Image.LANCZOS)
+    img_url = f"{base_url}/{n}"
+    response = requests.get(img_url)
+    response.raise_for_status()
+    img = Image.open(BytesIO(response.content)).resize((30, 30), Image.LANCZOS)
     img_tk = ImageTk.PhotoImage(img)
     chk_imgs[n] = make_chk()
     imgs.append(img_tk)
