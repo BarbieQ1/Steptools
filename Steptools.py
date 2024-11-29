@@ -76,11 +76,11 @@ def is_new_version_available():
     github_script_url = "https://raw.githubusercontent.com/BarbieQ1/Steptools/main/Steptools.py"
     response = requests.get(github_script_url)
     if response.status_code == 200:
-        github_script_code = response.text.strip()
+        github_script_code = response.text.replace('\r', '').strip()
         local_script_path = os.path.join(extracted_dir, "Steptools.py")
         if os.path.exists(local_script_path):
             with open(local_script_path, "r") as local_file:
-                local_script_code = local_file.read().strip()
+                local_script_code = local_file.read().replace('\r', '').strip()
             return github_script_code != local_script_code
         else:
             return True
