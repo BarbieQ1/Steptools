@@ -7,6 +7,9 @@ import zipfile
 import tkinter as tk
 from tkinter import ttk, messagebox
 import shutil
+import requests
+import filecmp
+import webbrowser
 
 try:
     import requests
@@ -67,6 +70,21 @@ if not os.path.isdir(extracted_dir):
     messagebox.showerror("Error", f"The directory '{extracted_dir}' was not found.")
     root.destroy()
 
+# Check if the local script matches the version on GitHub
+def is_new_version_available():
+    local_script_path = os.path.join(temp_dir, "Steptools.py")
+    github_script_url = "https://raw.githubusercontent.com/BarbieQ1/Steptools/main/Steptools.py"
+    response = requests.get(github_script_url)
+    if response.status_code == 200:
+        github_script_path = os.path.join(temp_dir, "Steptools_github.py")
+        with open(github_script_path, "w") as f:
+            f.write(response.text)
+        if os.path.exists(local_script_path):
+            return not filecmp.cmp(local_script_path, github_script_path, shallow=False)
+    return False
+
+new_version_available = is_new_version_available()
+
 def list_scripts():
     scripts = {}
     for f in os.listdir(extracted_dir):
@@ -91,6 +109,11 @@ def run_script(script_name, category):
 
 title_label = tk.Label(root, text="Steptools Scripts", font=("Helvetica", 20, "bold"), fg="white", bg="#333333")
 title_label.pack(pady=20)
+
+if new_version_available:
+    version_label = tk.Label(root, text="New Version available", font=("Helvetica", 10, "italic"), fg="red", bg="#333333", cursor="hand2")
+    version_label.pack()
+    version_label.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/BarbieQ1/Steptools"))
 
 frame = tk.Frame(root, bg="#333333")
 frame.pack(fill="both", expand=True, padx=20, pady=10)
