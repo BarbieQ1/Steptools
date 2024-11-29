@@ -9,7 +9,7 @@ from tkinter import ttk, messagebox
 import shutil
 import requests
 import filecmp
-import webbrowser1
+import webbrowser
 
 try:
     import requests
