@@ -62,7 +62,7 @@ extracted_dir = os.path.join(temp_dir, "Steptools-main", "Scripts")
 python_executable = sys.executable
 
 root = tk.Tk()
-root.title("Steptools PYw-Script Launcher")
+root.title("Steptools Launcher")
 root.geometry("500x600")
 root.configure(bg="#333333")
 
