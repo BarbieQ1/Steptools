@@ -5,7 +5,7 @@ import sys
 import importlib
 import zipfile
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, Menu
 import shutil
 import requests
 import filecmp
@@ -70,18 +70,31 @@ if not os.path.isdir(extracted_dir):
     messagebox.showerror("Error", f"The directory '{extracted_dir}' was not found.")
     root.destroy()
 
-# Check if the local script matches the version on GitHub
+new_version_available = False
+
 def is_new_version_available():
-    local_script_path = os.path.join(temp_dir, "Steptools.py")
     github_script_url = "https://raw.githubusercontent.com/BarbieQ1/Steptools/main/Steptools.py"
     response = requests.get(github_script_url)
     if response.status_code == 200:
-        github_script_path = os.path.join(temp_dir, "Steptools_github.py")
-        with open(github_script_path, "w") as f:
-            f.write(response.text)
+        github_script_code = response.text.strip()
+        local_script_path = os.path.join(extracted_dir, "Steptools.py")
         if os.path.exists(local_script_path):
-            return not filecmp.cmp(local_script_path, github_script_path, shallow=False)
+            with open(local_script_path, "r") as local_file:
+                local_script_code = local_file.read().strip()
+            return github_script_code != local_script_code
+        else:
+            return True
     return False
+
+def update_local_script():
+    github_script_url = "https://raw.githubusercontent.com/BarbieQ1/Steptools/main/Steptools.py"
+    response = requests.get(github_script_url)
+    if response.status_code == 200:
+        local_script_path = os.path.join(extracted_dir, "Steptools.py")
+        with open(local_script_path, "w") as local_file:
+            local_file.write(response.text)
+        root.destroy()
+        subprocess.Popen([python_executable, local_script_path], shell=True)
 
 new_version_available = is_new_version_available()
 
@@ -113,12 +126,14 @@ title_label.pack(pady=20)
 if new_version_available:
     version_label = tk.Label(root, text="New Version available", font=("Helvetica", 10, "italic"), fg="red", bg="#333333", cursor="hand2")
     version_label.pack()
-    version_label.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/BarbieQ1/Steptools"))
+    update_button = tk.Button(root, text="Update", font=("Helvetica", 10), fg="white", bg="#555555", command=update_local_script)
+    update_button.pack(pady=5)
 
 frame = tk.Frame(root, bg="#333333")
 frame.pack(fill="both", expand=True, padx=20, pady=10)
 
 scripts = list_scripts()
+active_categories = {category: tk.BooleanVar(value=(category == "Lost Ark")) for category in scripts}
 
 accordion = ttk.Notebook(frame)
 accordion.pack(fill="both", expand=True)
@@ -126,13 +141,32 @@ accordion.pack(fill="both", expand=True)
 style = ttk.Style()
 style.configure("TFrame", background="#333333")
 style.configure("TButton", background="#555555", foreground="white")
+style.configure("TNotebook", tabposition="n")
+style.configure("TNotebook.Tab", font=("Helvetica", 12), padding=[5, 5])
 
-for category, script_list in scripts.items():
-    category_frame = ttk.Frame(accordion)
-    accordion.add(category_frame, text=category)
+def update_accordion():
+    for i in accordion.tabs():
+        accordion.forget(i)
+    for category, script_list in scripts.items():
+        if active_categories[category].get():
+            category_frame = ttk.Frame(accordion)
+            accordion.add(category_frame, text=category)
+            for script in script_list:
+                button = tk.Button(category_frame, text=script, command=lambda s=script, c=category: run_script(s, c), width=30, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
+                button.pack(pady=5)
 
-    for script in script_list:
-        button = tk.Button(category_frame, text=script, command=lambda s=script, c=category: run_script(s, c), width=30, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
-        button.pack(pady=5, padx=10)
+update_accordion()
+
+def show_context_menu():
+    context_menu = tk.Toplevel(root)
+    context_menu.title("Category Selection")
+    context_menu.geometry("300x400")
+    context_menu.configure(bg="#333333")
+    for category, var in active_categories.items():
+        checkbox = tk.Checkbutton(context_menu, text=category, variable=var, font=("Helvetica", 12), fg="white", bg="#333333", selectcolor="#555555", command=update_accordion)
+        checkbox.pack(anchor="w", pady=5, padx=10)
+
+menu_button = tk.Button(root, text="...", command=show_context_menu, font=("Helvetica", 15), fg="white", bg="#555555")
+menu_button.place(relx=0.95, rely=0.05, anchor="ne")
 
 root.mainloop()
