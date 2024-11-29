@@ -5,7 +5,7 @@ import sys
 import importlib
 import zipfile
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 import shutil
 
 try:
@@ -60,7 +60,7 @@ python_executable = sys.executable
 
 root = tk.Tk()
 root.title("Steptools PYw-Script Launcher")
-root.geometry("500x400")
+root.geometry("500x600")
 root.configure(bg="#333333")
 
 if not os.path.isdir(extracted_dir):
@@ -68,10 +68,24 @@ if not os.path.isdir(extracted_dir):
     root.destroy()
 
 def list_scripts():
-    return [os.path.splitext(f)[0] for f in os.listdir(extracted_dir) if f.endswith(".pyw")]
+    scripts = {}
+    for f in os.listdir(extracted_dir):
+        if f.endswith(".pyw"):
+            script_name, _ = os.path.splitext(f)
+            if "#" in script_name:
+                category, name = script_name.split("#", 1)
+                category = category.strip()
+                name = name.strip()
+            else:
+                category = "Uncategorized"
+                name = script_name
+            if category not in scripts:
+                scripts[category] = []
+            scripts[category].append(name)
+    return scripts
 
-def run_script(script_name):
-    script_path = os.path.join(extracted_dir, script_name + ".pyw")
+def run_script(script_name, category):
+    script_path = os.path.join(extracted_dir, f"{category}#{script_name}.pyw")
     check_and_install_modules(script_path)
     subprocess.Popen([python_executable, script_path], shell=True)
 
@@ -81,22 +95,21 @@ title_label.pack(pady=20)
 frame = tk.Frame(root, bg="#333333")
 frame.pack(fill="both", expand=True, padx=20, pady=10)
 
-listbox = tk.Listbox(frame, bg="#444444", fg="#ffffff", selectbackground="#555555", highlightthickness=0, bd=0, font=("Helvetica", 12), height=10)
-listbox.pack(side="left", fill="both", expand=True)
+scripts = list_scripts()
 
-scrollbar = tk.Scrollbar(frame, command=listbox.yview)
-scrollbar.pack(side="right", fill="y")
-listbox.config(yscrollcommand=scrollbar.set)
+accordion = ttk.Notebook(frame)
+accordion.pack(fill="both", expand=True)
 
-for script in list_scripts():
-    listbox.insert("end", script)
+style = ttk.Style()
+style.configure("TFrame", background="#333333")
+style.configure("TButton", background="#555555", foreground="white")
 
-def execute_selected_script():
-    selected_script = listbox.get(listbox.curselection())
-    if selected_script:
-        run_script(selected_script)
+for category, script_list in scripts.items():
+    category_frame = ttk.Frame(accordion)
+    accordion.add(category_frame, text=category)
 
-execute_button = tk.Button(root, text="Run Script", command=execute_selected_script, width=20, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
-execute_button.pack(pady=20)
+    for script in script_list:
+        button = tk.Button(category_frame, text=script, command=lambda s=script, c=category: run_script(s, c), width=30, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
+        button.pack(pady=5, padx=10)
 
 root.mainloop()
