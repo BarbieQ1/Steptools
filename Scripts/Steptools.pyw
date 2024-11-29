@@ -101,7 +101,7 @@ new_version_available = is_new_version_available()
 def list_scripts():
     scripts = {}
     for f in os.listdir(extracted_dir):
-        if f.endswith(".pyw"):
+        if f.endswith(".pyw") and f != "Steptools.pyw":  # Füge diese Bedingung hinzu, um Steptools.pyw zu ignorieren
             script_name, _ = os.path.splitext(f)
             if "#" in script_name:
                 category, name = script_name.split("#", 1)
