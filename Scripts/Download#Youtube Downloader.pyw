@@ -14,18 +14,16 @@ def progress_hook(d):
         fragments_done = d.get('fragment_index', 0)
         fragments_total = d.get('fragment_count', 0)
 
-        # Geschwindigkeit in Mbit/s und ETA-Zeitformatierung
         speed_mbps = (speed * 8) / (1024 * 1024) if speed else 0
-        speed_label.config(text=f"Geschwindigkeit: {speed_mbps:.2f} Mbit/s")
-        time_label.config(text=f"Verbleibende Zeit: {time.strftime('%H:%M:%S', time.gmtime(eta))}" if eta else "Verbleibende Zeit: Berechnung...")
+        speed_label.config(text=f"Speed: {speed_mbps:.2f} Mbps")
+        time_label.config(text=f"ETA: {time.strftime('%H:%M:%S', time.gmtime(eta))}" if eta else "ETA: Calculating...")
 
-        # Fortschritt in Fragmenten, falls verwendet
         if fragments_total:
             fragment_label.config(text=f"Fragment: {fragments_done}/{fragments_total}")
 
     elif d['status'] == 'finished':
-        speed_label.config(text="Geschwindigkeit: 0 Mbit/s")
-        time_label.config(text="Verbleibende Zeit: 00:00:00")
+        speed_label.config(text="Speed: 0 Mbps")
+        time_label.config(text="ETA: 00:00:00")
         fragment_label.config(text="")
 
 def start_download():
@@ -35,14 +33,13 @@ def start_download():
 def download_video():
     url = url_entry.get().strip()
     if not url:
-        messagebox.showwarning("Warnung", "Bitte einen YouTube-Link eingeben.")
+        messagebox.showwarning("Warning", "Please enter a YouTube link.")
         return
 
-    download_path = filedialog.askdirectory(title="Speicherort auswählen")
+    download_path = filedialog.askdirectory(title="Select download location")
     if not download_path:
         return
 
-    # Optionen für MP3-Audio oder MP4-Video
     options = {
         'format': 'bestaudio' if toggle_var.get() == "MP3-Audio" else 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
         'outtmpl': os.path.join(download_path, '%(title)s.%(ext)s'),
@@ -51,7 +48,6 @@ def download_video():
         'progress_hooks': [progress_hook],
     }
 
-    # Post-Processing nur für MP3-Audio
     if toggle_var.get() == "MP3-Audio":
         options['postprocessors'] = [{
             'key': 'FFmpegExtractAudio',
@@ -62,9 +58,9 @@ def download_video():
     try:
         with yt_dlp.YoutubeDL(options) as ydl:
             ydl.download([url])
-        messagebox.showinfo("Erfolg", "Download abgeschlossen.")
+        messagebox.showinfo("Success", "Download complete.")
     except Exception as e:
-        messagebox.showerror("Fehler", f"Fehler beim Herunterladen: {e}")
+        messagebox.showerror("Error", f"Error during download: {e}")
 
 def set_mp3():
     toggle_var.set("MP3-Audio")
@@ -80,20 +76,18 @@ root = tk.Tk()
 root.title("YouTube Downloader")
 root.configure(bg="#1e1e1e")
 root.geometry("450x250")
-root.attributes("-topmost", True)  # Hält das Fenster immer im Vordergrund
+root.attributes("-topmost", True)
 
-# Initialisierung der Variablen und des Schalters
 toggle_var = tk.StringVar(value="MP4-Video")
 toggle_frame = tk.Frame(root, bg="#1e1e1e")
 toggle_frame.pack(pady=10)
 
-# MP3- und MP4-Buttons
 mp3_button = tk.Button(toggle_frame, text="MP3-Audio", command=set_mp3, width=10, bg="#444444", fg="white")
 mp3_button.pack(side="left", padx=5)
 mp4_button = tk.Button(toggle_frame, text="MP4-Video", command=set_mp4, width=10, bg="green", fg="white")
 mp4_button.pack(side="left", padx=5)
 
-url_label = tk.Label(root, text="YouTube Link eingeben:", bg="#1e1e1e", fg="white", font=("Arial", 10))
+url_label = tk.Label(root, text="Enter YouTube Link:", bg="#1e1e1e", fg="white", font=("Arial", 10))
 url_label.pack(pady=5)
 
 url_entry = tk.Entry(root, width=50, font=("Arial", 10))
@@ -102,14 +96,12 @@ url_entry.pack(pady=5)
 download_button = tk.Button(root, text="Download", command=start_download, bg="#444444", fg="white", font=("Arial", 10))
 download_button.pack(pady=10)
 
-# Anzeigen von Geschwindigkeit und verbleibender Zeit
-speed_label = tk.Label(root, text="Geschwindigkeit: 0 Mbit/s", bg="#1e1e1e", fg="white", font=("Arial", 10))
+speed_label = tk.Label(root, text="Speed: 0 Mbps", bg="#1e1e1e", fg="white", font=("Arial", 10))
 speed_label.pack()
 
-time_label = tk.Label(root, text="Verbleibende Zeit: Berechnung...", bg="#1e1e1e", fg="white", font=("Arial", 10))
+time_label = tk.Label(root, text="ETA: Calculating...", bg="#1e1e1e", fg="white", font=("Arial", 10))
 time_label.pack()
 
-# Fragment-Download-Anzeige
 fragment_label = tk.Label(root, text="", bg="#1e1e1e", fg="white", font=("Arial", 10))
 fragment_label.pack()
 
