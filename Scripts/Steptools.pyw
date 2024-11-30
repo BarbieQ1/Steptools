@@ -123,6 +123,9 @@ def run_script(script_name, category):
 title_label = tk.Label(root, text="Steptools Scripts", font=("Helvetica", 20, "bold"), fg="white", bg="#333333")
 title_label.pack(pady=20)
 
+refresh_button = tk.Button(root, text="↻", command=lambda: refresh_app(), font=("Helvetica", 15), fg="white", bg="#555555")
+refresh_button.place(relx=0.95, rely=0.05, anchor="ne")
+
 if new_version_available:
     version_label = tk.Label(root, text="New Version available", font=("Helvetica", 10, "italic"), fg="red", bg="#333333", cursor="hand2")
     version_label.pack()
@@ -171,9 +174,6 @@ def refresh_app():
     subprocess.Popen([python_executable, __file__], shell=True)
 
 menu_button = tk.Button(root, text="...", command=show_context_menu, font=("Helvetica", 15), fg="white", bg="#555555")
-menu_button.place(relx=0.95, rely=0.05, anchor="ne")
-
-refresh_button = tk.Button(root, text="↻", command=refresh_app, font=("Helvetica", 15), fg="white", bg="#555555")
-refresh_button.place(relx=0.95, rely=0.95, anchor="se")
+menu_button.place(relx=0.9, rely=0.05, anchor="ne")
 
 root.mainloop()
