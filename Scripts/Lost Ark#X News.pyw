@@ -6,8 +6,9 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import tkinter as tk
-from tkinter import scrolledtext, simpledialog, ttk
+from tkinter import scrolledtext, simpledialog, ttk, messagebox
 from datetime import datetime
+import os
 
 refresh_interval = None
 refreshing = False
@@ -18,6 +19,16 @@ button_frame = None
 progress_frame = None
 last_updated_label = None
 
+def check_chrome_installed():
+    chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    chrome_path_alt = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+    if os.path.exists(chrome_path):
+        return chrome_path
+    elif os.path.exists(chrome_path_alt):
+        return chrome_path_alt
+    else:
+        return None
+
 def get_last_three_posts(username):
     global progress_bar, progress_frame, last_updated_label
     url = f"https://x.com/{username}"
@@ -26,6 +37,12 @@ def get_last_three_posts(username):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_path = check_chrome_installed()
+    if not chrome_path:
+        messagebox.showerror("Chrome Not Found", "Google Chrome is not installed on this system. Please install it to use this script.")
+        root.quit()
+        return
+    chrome_options.binary_location = chrome_path
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
@@ -115,7 +132,7 @@ def display_output_in_darkmode_window(output):
     root = tk.Tk()
     root.title("X Posts Display")
     root.configure(bg="#2E2E2E")
-    root.geometry("800x450")
+    root.geometry("800x580")
 
     last_updated_label = tk.Label(root, text="Last updated: Not yet updated", fg="#A9A9A9", bg="#2E2E2E", font=("Helvetica", 8))
     last_updated_label.pack(anchor='w', padx=10, pady=(5, 5))
