@@ -162,25 +162,32 @@ style.configure("TButton", background="#555555", foreground="white")
 style.configure("TNotebook", tabposition="n")
 style.configure("TNotebook.Tab", font=("Helvetica", 12), padding=[5, 5])
 
-for category, subcategories in scripts.items():
-    category_frame = ttk.Frame(accordion)
-    accordion.add(category_frame, text=category)
-    for subcategory, script_list in subcategories.items():
-        if subcategory:
-            subcategory_label = tk.Label(category_frame, text=subcategory, font=("Helvetica", 10, "bold"), fg="white", bg="#333333")
-            subcategory_label.pack(pady=(10, 5))
-        for script in script_list:
-            button = tk.Button(category_frame, text=script, command=lambda s=script, c=category, sc=subcategory: run_script(s, c, sc), width=30, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
-            button.pack(pady=5, padx=10)
+active_categories = {category: tk.BooleanVar(value=(category == 'Lost Ark')) for category in scripts}
+
+def update_accordion():
+    for tab in accordion.tabs():
+        accordion.forget(tab)
+    for category, subcategories in scripts.items():
+        if active_categories[category].get():
+            category_frame = ttk.Frame(accordion)
+            accordion.add(category_frame, text=category)
+            for subcategory, script_list in subcategories.items():
+                if subcategory:
+                    subcategory_label = tk.Label(category_frame, text=subcategory, font=("Helvetica", 14, "bold"), fg="white", bg="#333333")
+                    subcategory_label.pack(pady=(10, 5))
+                for script in script_list:
+                    button = tk.Button(category_frame, text=script, command=lambda s=script, c=category, sc=subcategory: run_script(s, c, sc), width=30, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
+                    button.pack(pady=5, padx=10)
+
+update_accordion()
 
 def show_context_menu():
     context_menu = tk.Toplevel(root)
     context_menu.title("Category Selection")
     context_menu.geometry("300x400")
     context_menu.configure(bg="#333333")
-    for category in scripts:
-        var = tk.BooleanVar(value=True)
-        checkbox = tk.Checkbutton(context_menu, text=category, variable=var, font=("Helvetica", 12), fg="white", bg="#333333", selectcolor="#555555")
+    for category, var in active_categories.items():
+        checkbox = tk.Checkbutton(context_menu, text=category, variable=var, font=("Helvetica", 12), fg="white", bg="#333333", selectcolor="#555555", command=update_accordion)
         checkbox.pack(anchor="w", pady=5, padx=10)
 
 def refresh_app():
