@@ -63,7 +63,7 @@ python_executable = sys.executable
 
 root = tk.Tk()
 root.title("Steptools Launcher")
-root.geometry("500x600")
+root.geometry("500x700")
 root.configure(bg="#333333")
 
 if not os.path.isdir(extracted_dir):
@@ -101,22 +101,38 @@ new_version_available = is_new_version_available()
 def list_scripts():
     scripts = {}
     for f in os.listdir(extracted_dir):
-        if f.endswith(".pyw") and f != "Steptools.pyw":  # Füge diese Bedingung hinzu, um Steptools.pyw zu ignorieren
+        if f.endswith(".pyw") and f != "Steptools.pyw":
             script_name, _ = os.path.splitext(f)
-            if "#" in script_name:
-                category, name = script_name.split("#", 1)
-                category = category.strip()
-                name = name.strip()
+            parts = script_name.split("#")
+            if len(parts) == 3:
+                category, subcategory, name = parts
+            elif len(parts) == 2:
+                category, name = parts
+                subcategory = None
             else:
                 category = "Uncategorized"
+                subcategory = None
                 name = script_name
+            category = category.strip()
+            name = name.strip()
+            subcategory = subcategory.strip() if subcategory else None
             if category not in scripts:
-                scripts[category] = []
-            scripts[category].append(name)
+                scripts[category] = {}
+            if subcategory:
+                if subcategory not in scripts[category]:
+                    scripts[category][subcategory] = []
+                scripts[category][subcategory].append(name)
+            else:
+                if None not in scripts[category]:
+                    scripts[category][None] = []
+                scripts[category][None].append(name)
     return scripts
 
-def run_script(script_name, category):
-    script_path = os.path.join(extracted_dir, f"{category}#{script_name}.pyw")
+def run_script(script_name, category, subcategory):
+    if subcategory:
+        script_path = os.path.join(extracted_dir, f"{category}#{subcategory}#{script_name}.pyw")
+    else:
+        script_path = os.path.join(extracted_dir, f"{category}#{script_name}.pyw")
     check_and_install_modules(script_path)
     subprocess.Popen([python_executable, script_path], shell=True)
 
@@ -136,7 +152,6 @@ frame = tk.Frame(root, bg="#333333")
 frame.pack(fill="both", expand=True, padx=20, pady=10)
 
 scripts = list_scripts()
-active_categories = {category: tk.BooleanVar(value=(category == "Lost Ark")) for category in scripts}
 
 accordion = ttk.Notebook(frame)
 accordion.pack(fill="both", expand=True)
@@ -147,26 +162,25 @@ style.configure("TButton", background="#555555", foreground="white")
 style.configure("TNotebook", tabposition="n")
 style.configure("TNotebook.Tab", font=("Helvetica", 12), padding=[5, 5])
 
-def update_accordion():
-    for i in accordion.tabs():
-        accordion.forget(i)
-    for category, script_list in scripts.items():
-        if active_categories[category].get():
-            category_frame = ttk.Frame(accordion)
-            accordion.add(category_frame, text=category)
-            for script in script_list:
-                button = tk.Button(category_frame, text=script, command=lambda s=script, c=category: run_script(s, c), width=30, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
-                button.pack(pady=5)
-
-update_accordion()
+for category, subcategories in scripts.items():
+    category_frame = ttk.Frame(accordion)
+    accordion.add(category_frame, text=category)
+    for subcategory, script_list in subcategories.items():
+        if subcategory:
+            subcategory_label = tk.Label(category_frame, text=subcategory, font=("Helvetica", 10, "bold"), fg="white", bg="#333333")
+            subcategory_label.pack(pady=(10, 5))
+        for script in script_list:
+            button = tk.Button(category_frame, text=script, command=lambda s=script, c=category, sc=subcategory: run_script(s, c, sc), width=30, height=2, bg="#555555", fg="white", font=("Helvetica", 12))
+            button.pack(pady=5, padx=10)
 
 def show_context_menu():
     context_menu = tk.Toplevel(root)
     context_menu.title("Category Selection")
     context_menu.geometry("300x400")
     context_menu.configure(bg="#333333")
-    for category, var in active_categories.items():
-        checkbox = tk.Checkbutton(context_menu, text=category, variable=var, font=("Helvetica", 12), fg="white", bg="#333333", selectcolor="#555555", command=update_accordion)
+    for category in scripts:
+        var = tk.BooleanVar(value=True)
+        checkbox = tk.Checkbutton(context_menu, text=category, variable=var, font=("Helvetica", 12), fg="white", bg="#333333", selectcolor="#555555")
         checkbox.pack(anchor="w", pady=5, padx=10)
 
 def refresh_app():
