@@ -166,7 +166,14 @@ def show_context_menu():
         checkbox = tk.Checkbutton(context_menu, text=category, variable=var, font=("Helvetica", 12), fg="white", bg="#333333", selectcolor="#555555", command=update_accordion)
         checkbox.pack(anchor="w", pady=5, padx=10)
 
+def refresh_app():
+    root.destroy()
+    subprocess.Popen([python_executable, __file__], shell=True)
+
 menu_button = tk.Button(root, text="...", command=show_context_menu, font=("Helvetica", 15), fg="white", bg="#555555")
 menu_button.place(relx=0.95, rely=0.05, anchor="ne")
+
+refresh_button = tk.Button(root, text="↻", command=refresh_app, font=("Helvetica", 15), fg="white", bg="#555555")
+refresh_button.place(relx=0.95, rely=0.95, anchor="se")
 
 root.mainloop()
