@@ -1,13 +1,12 @@
 import requests, subprocess, sys, tempfile, os, time, threading
 from tkinter import Tk, Label, StringVar
-import psutil
 
-def install(module): 
+def install(module):
     subprocess.run([sys.executable, "-m", "pip", "install", module], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-try: 
+try:
     import psutil
-except ImportError: 
+except ImportError:
     install("psutil")
     import psutil
 
