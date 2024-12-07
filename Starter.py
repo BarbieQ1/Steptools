@@ -15,7 +15,7 @@ url = "https://raw.githubusercontent.com/BarbieQ1/Steptools/main/Scripts/Steptoo
 def show_loader():
     root = Tk()
     root.title("Loading...")
-    root.geometry("350x100")
+    root.geometry("350x80")
     root.resizable(False, False)
     status_text = StringVar()
     status_text.set("Loading Steptools Launcher...")
