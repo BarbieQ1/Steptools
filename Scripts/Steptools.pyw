@@ -184,7 +184,7 @@ update_accordion()
 def show_context_menu():
     context_menu = tk.Toplevel(root)
     context_menu.title("Category Selection")
-    context_menu.geometry("300x400")
+    context_menu.geometry("250x400")
     context_menu.configure(bg="#333333")
     for category, var in active_categories.items():
         checkbox = tk.Checkbutton(context_menu, text=category, variable=var, font=("Helvetica", 12), fg="white", bg="#333333", selectcolor="#555555", command=update_accordion)
