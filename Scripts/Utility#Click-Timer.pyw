@@ -42,11 +42,10 @@ class App:
         self.info_label = tk.Label(self.input_frame, text="", bg='#2e2e2e', fg='white', justify=tk.LEFT, anchor=tk.W)
         self.info_label.grid(row=3, column=0, columnspan=3, padx=10, pady=5, sticky=tk.W)
         self.progress = tk.DoubleVar()
-        self.progress_bar = ttk.Progressbar(self.main_frame, variable=self.progress, maximum=100)
         self.style = ttk.Style()
         self.style.theme_use('clam')
-        self.style.configure("white.Horizontal.TProgressbar", troughcolor='#444', background='white', thickness=20)
-        self.progress_bar.configure(style="white.Horizontal.TProgressbar")
+        self.style.configure("custom.Horizontal.TProgressbar", troughcolor='#444', background='#2e7d32', thickness=20)
+        self.progress_bar = ttk.Progressbar(self.main_frame, variable=self.progress, maximum=100, style="custom.Horizontal.TProgressbar")
         self.progress_bar.pack(fill=tk.X, padx=10, pady=20)
         self.time_label = tk.Label(self.main_frame, text="Remaining Time: 0.0s", bg='#2e2e2e', fg='white')
         self.time_label.pack()
@@ -92,9 +91,15 @@ class App:
         self.entry_time.config(state=state)
 
     def is_window_active(self):
-        active_window = gw.getActiveWindow()
-        current_window = gw.getWindowsWithTitle(self.root.title())[0] if gw.getWindowsWithTitle(self.root.title()) else None
-        return active_window == current_window
+        try:
+            active_window = gw.getActiveWindow()
+            windows_with_title = gw.getWindowsWithTitle(self.root.title())
+            if windows_with_title:
+                current_window = windows_with_title[0]
+                return active_window == current_window
+        except Exception as e:
+            print(f"[WARN] Konnte aktives Fenster nicht bestimmen: {e}")
+        return False
 
     def update_button_status(self):
         if self.running:
@@ -108,51 +113,58 @@ class App:
         self.root.after(100, self.update_button_status)
 
     def run(self):
-        while self.running:
-            if not self.is_window_active():
-                key1 = self.entry_r.get().strip()
-                key2 = self.entry_e.get().strip()
-                double_press_r = self.checkbox_var_r.get()
-                double_press_e = self.checkbox_var_e.get()
-                wait_time_str = self.entry_time.get().replace(',', '.')
-                try:
-                    wait_time = float(wait_time_str)
-                except ValueError:
-                    wait_time = 47
-                total_time = 1 + 0.7 + wait_time
-                elapsed = 0
-                if not self.wait_with_stop_check(1):
-                    return
-                elapsed += 1
-                self.update_progress(elapsed, total_time)
-                if not self.running:
-                    break
-                if key1:
-                    self.press_key(key1, double_press_r)
-                if not self.running:
-                    break
-                if not self.wait_with_stop_check(0.7):
-                    return
-                elapsed += 0.7
-                self.update_progress(elapsed, total_time)
-                if not self.running:
-                    break
-                if key2:
-                    self.press_key(key2, double_press_e)
-                if not self.running:
-                    break
-                start_wait_time = time.time()
-                while (time.time() - start_wait_time) < wait_time:
-                    if not self.running:
-                        return
-                    if self.paused:
-                        while self.paused:
-                            time.sleep(0.1)
-                    elapsed = 1 + 0.7 + (time.time() - start_wait_time)
+        while self.running and not self.stop_event.is_set():
+            try:
+                if not self.is_window_active():
+                    key1 = self.entry_r.get().strip()
+                    key2 = self.entry_e.get().strip()
+                    double_press_r = self.checkbox_var_r.get()
+                    double_press_e = self.checkbox_var_e.get()
+                    wait_time_str = self.entry_time.get().replace(',', '.')
+                    try:
+                        wait_time = float(wait_time_str)
+                    except ValueError:
+                        wait_time = 47
+                    total_time = 1 + 0.7 + wait_time
+                    elapsed = 0
+                    if not self.wait_with_stop_check(1):
+                        break
+                    elapsed += 1
                     self.update_progress(elapsed, total_time)
-                if not self.running:
-                    break
-                self.reset_progress()
+                    if not self.running:
+                        break
+                    if key1:
+                        self.press_key(key1, double_press_r)
+                    if not self.running:
+                        break
+                    if not self.wait_with_stop_check(0.7):
+                        break
+                    elapsed += 0.7
+                    self.update_progress(elapsed, total_time)
+                    if not self.running:
+                        break
+                    if key2:
+                        self.press_key(key2, double_press_e)
+                    if not self.running:
+                        break
+                    start_wait_time = time.time()
+                    while (time.time() - start_wait_time) < wait_time:
+                        if not self.running:
+                            break
+                        if self.paused:
+                            while self.paused and self.running:
+                                time.sleep(0.1)
+                        elapsed = 1 + 0.7 + (time.time() - start_wait_time)
+                        self.update_progress(elapsed, total_time)
+                        if self.stop_event.is_set():
+                            break
+                    if not self.running:
+                        break
+                    self.reset_progress()
+            except Exception as e:
+                print(f"[ERROR] Ausnahme im Skript aufgetreten: {e}")
+                time.sleep(1)
+            time.sleep(0.1)
 
     def wait_with_stop_check(self, duration):
         start_time = time.time()
@@ -160,8 +172,9 @@ class App:
             if self.stop_event.is_set():
                 return False
             if self.paused:
-                while self.paused:
+                while self.paused and not self.stop_event.is_set():
                     time.sleep(0.1)
+            time.sleep(0.01)
         return True
 
     def press_key(self, key, double_press):
@@ -176,10 +189,22 @@ class App:
         progress_percentage = (elapsed / total_time) * 100
         self.progress.set(progress_percentage)
         self.time_label.config(text=f"Remaining Time: {max(0, total_time - elapsed):.1f}s")
+        color = self.get_color_for_percentage(progress_percentage)
+        self.style.configure("custom.Horizontal.TProgressbar", background=color)
 
     def reset_progress(self):
         self.progress.set(0)
         self.time_label.config(text="Remaining Time: 0.0s")
+        self.style.configure("custom.Horizontal.TProgressbar", background='#2e7d32')
+
+    def get_color_for_percentage(self, percentage):
+        start_rgb = (46, 125, 50)
+        end_rgb = (198, 40, 40)
+        t = max(0, min(1, percentage / 100.0))
+        r = int(start_rgb[0] + (end_rgb[0] - start_rgb[0]) * t)
+        g = int(start_rgb[1] + (end_rgb[1] - start_rgb[1]) * t)
+        b = int(start_rgb[2] + (end_rgb[2] - start_rgb[2]) * t)
+        return f'#{r:02x}{g:02x}{b:02x}'
 
 if __name__ == "__main__":
     root = tk.Tk()
