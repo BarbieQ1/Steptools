@@ -6,7 +6,7 @@ import math, pyperclip
 
 base_url = "https://raw.githubusercontent.com/BarbieQ1/Steptools/main/Scripts/AegirG1-pictures"
 names = ["eye.png", "hea.png", "horn.png", "sick.png"]
-colormap = {"eye.png": "red eye", "hea.png": "green heart", "horn.png": "blue horn", "sick.png": "black scythe"}
+colormap = {"eye.png": "red", "hea.png": "green", "horn.png": "blue", "sick.png": "black"}
 posmap = {1: 12, 2: 1, 3: 3, 4: 5, 5: 6, 6: 7, 7: 9, 8: 11}
 sel_color, circle_colors, active_label = None, {}, None
 img_frames, chk_imgs, imgs = {}, {}, []
@@ -53,11 +53,17 @@ def rm_color(name):
 
 def copy_clip():
     ord_col = ["green", "red", "blue", "black"]
+    labelmap = {
+        "green": "Heart",
+        "red": "Eye",
+        "blue": "Horn",
+        "black": "Scythe"
+    }
     parts = []
     for col in ord_col:
         for c, v in circle_colors.items():
             if v and v[0] == col:
-                parts.append(f"{col.capitalize()}={posmap[v[1]]}")
+                parts.append(f"{col.capitalize()} = {posmap[v[1]]} ({labelmap[col]})")
                 break
     pyperclip.copy("  ||  ".join(parts))
 
