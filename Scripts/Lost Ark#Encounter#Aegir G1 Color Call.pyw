@@ -52,21 +52,20 @@ def rm_color(name):
     update_check(col, False)
 
 def copy_clip():
-    ord_col = ["green", "red", "blue", "black"]
     labelmap = {
         "green": "Heart",
         "red": "Eye",
         "blue": "Horn",
         "black": "Scythe"
     }
+    ord_col = ["green", "red", "blue", "black"]
     parts = []
     for col in ord_col:
         for c, v in circle_colors.items():
             if v and v[0] == col:
-                parts.append(f"{col.capitalize()} = {posmap[v[1]]} ({labelmap[col]})")
+                parts.append(f"{posmap[v[1]]} {labelmap[col]}")
                 break
     pyperclip.copy("  ||  ".join(parts))
-
 def reset():
     global circle_colors, active_label
     for c in circle_colors:
